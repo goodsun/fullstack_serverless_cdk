@@ -1,7 +1,12 @@
 // Configuration for the frontend app
 const CONFIG = {
-    // API endpoint from localStorage or empty
-    API_ENDPOINT: localStorage.getItem('apiEndpoint') || '',
+    // API endpoint: auto-configured > localStorage > empty
+    API_ENDPOINT: (window.API_CONFIG && window.API_CONFIG.apiEndpoint) || 
+                  localStorage.getItem('apiEndpoint') || 
+                  '',
+    
+    // Check if API is managed by deployment
+    IS_API_MANAGED: window.API_CONFIG && window.API_CONFIG.isManaged,
     
     // API paths
     ITEMS_PATH: '/items',

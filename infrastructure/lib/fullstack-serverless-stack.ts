@@ -166,5 +166,10 @@ export class FullstackServerlessStack extends cdk.Stack {
       value: table.tableName,
       description: 'DynamoDB Table Name',
     });
+
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+      description: 'CloudFront Distribution ID',
+    });
   }
 }

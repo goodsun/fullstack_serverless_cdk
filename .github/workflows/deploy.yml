@@ -59,6 +59,49 @@ jobs:
       if: github.ref == 'refs/heads/production'
       run: npm run deploy:prod -- --require-approval never
 
+    - name: Configure frontend with API endpoint
+      run: |
+        # Get stack name and environment based on branch
+        if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+          STACK_NAME="${{ secrets.PROJECT_NAME }}-dev"
+          ENV="dev"
+          API_ENDPOINT="${{ secrets.API_ENDPOINT_DEV || '' }}"
+        elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          STACK_NAME="${{ secrets.PROJECT_NAME }}-staging"
+          ENV="staging"
+          API_ENDPOINT="${{ secrets.API_ENDPOINT_STAGING || '' }}"
+        elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+          STACK_NAME="${{ secrets.PROJECT_NAME }}-prod"
+          ENV="prod"
+          API_ENDPOINT="${{ secrets.API_ENDPOINT_PROD || '' }}"
+        fi
+        
+        # If environment-specific API_ENDPOINT is not set in secrets, get it from stack output
+        if [ -z "$API_ENDPOINT" ]; then
+          API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }})
+        fi
+        
+        # Create api-config.js with the API endpoint
+        cat > frontend/js/api-config.js << EOF
+        // Auto-generated during deployment - DO NOT EDIT
+        window.API_CONFIG = {
+          apiEndpoint: '$API_ENDPOINT',
+          isManaged: true
+        };
+        EOF
+        
+        # Get S3 bucket name
+        BUCKET_NAME="${{ secrets.PROJECT_NAME }}-frontend-${ENV}"
+        
+        # Upload updated frontend
+        aws s3 sync frontend/ s3://$BUCKET_NAME/ --delete
+        
+        # Invalidate CloudFront cache
+        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} || echo "")
+        if [ ! -z "$DISTRIBUTION_ID" ]; then
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+        fi
+
     - name: Show outputs
       run: |
         echo "Deployment completed!"

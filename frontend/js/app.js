@@ -182,10 +182,29 @@ window.saveApiEndpoint = saveApiEndpoint;
 // Initialize app when DOM is ready
 let app;
 document.addEventListener('DOMContentLoaded', () => {
-    // Show current API endpoint if set
-    const savedEndpoint = localStorage.getItem('apiEndpoint');
-    if (savedEndpoint) {
-        document.getElementById('apiEndpoint').value = savedEndpoint;
+    const apiConfigDiv = document.getElementById('apiConfig');
+    const apiEndpointInput = document.getElementById('apiEndpoint');
+    
+    if (CONFIG.IS_API_MANAGED) {
+        // API is auto-configured, show as read-only
+        apiConfigDiv.innerHTML = `
+            <div style="padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+                <strong>API Endpoint (Auto-configured):</strong><br>
+                <code>${CONFIG.API_ENDPOINT}</code>
+            </div>
+        `;
+    } else {
+        // Manual configuration needed
+        const savedEndpoint = localStorage.getItem('apiEndpoint');
+        if (savedEndpoint) {
+            apiEndpointInput.value = savedEndpoint;
+        }
+        
+        if (!CONFIG.API_ENDPOINT) {
+            // Show warning if no API configured
+            apiConfigDiv.style.border = '2px solid #f8d7da';
+            apiConfigDiv.style.background = '#f8d7da';
+        }
     }
     
     app = new App();

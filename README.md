@@ -205,6 +205,9 @@ CDKは以下の優先順位でAWS認証情報を使用します：
    AWS_SECRET_ACCESS_KEY   # 必須: AWS IAMユーザーのシークレットキー
    PROJECT_NAME            # 必須: プロジェクト名（例: my-app）
    AWS_REGION              # オプション: リージョン（デフォルト: ap-northeast-1）
+   API_ENDPOINT_DEV        # オプション: 開発環境のAPI URL（自動取得も可能）
+   API_ENDPOINT_STAGING    # オプション: ステージング環境のAPI URL（自動取得も可能）
+   API_ENDPOINT_PROD       # オプション: 本番環境のAPI URL（自動取得も可能）
    ```
 
 2. **IAMユーザーの必要な権限**
@@ -268,15 +271,25 @@ npm run deploy:dev -- --require-approval never
 
 ## 🔧 使用方法
 
-### 初回セットアップ
+### API エンドポイントの設定
+
+#### 自動設定（推奨）
+デプロイ時に自動的にAPI URLが設定されます：
+- CloudFormationスタックから自動取得（デフォルト）
+- GitHub Secretsで環境別に指定も可能：
+  - `API_ENDPOINT_DEV` - 開発環境用
+  - `API_ENDPOINT_STAGING` - ステージング環境用
+  - `API_ENDPOINT_PROD` - 本番環境用
+
+#### 手動設定
+自動設定されていない場合：
 1. デプロイ後、CloudFront URLにアクセス
 2. 画面上部のテキストボックスにAPI Gateway URLを入力
    - デプロイ時に出力される `ApiEndpoint` の値を使用
    - 例: `https://xxx.execute-api.region.amazonaws.com/dev`
 3. 「Save」ボタンをクリック
-4. ページがリロードされ、CRUD操作が可能になります
 
-※ API URLはブラウザのlocalStorageに保存されるため、次回以降は自動的に使用されます
+※ 手動設定したAPI URLはブラウザのlocalStorageに保存されます
 
 ## 🎆 次のステップ
 
