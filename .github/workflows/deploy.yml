@@ -49,76 +49,46 @@ jobs:
 
     - name: Deploy to dev (develop branch)
       if: github.ref == 'refs/heads/develop'
-      run: npm run deploy:dev -- --require-approval never
+      env:
+        API_ENDPOINT: ${{ secrets.API_ENDPOINT_DEV }}
+      run: |
+        # Debug: Show environment variables
+        echo "Environment: dev"
+        echo "API_ENDPOINT from secret: ${API_ENDPOINT}"
+        echo "PROJECT_NAME: ${{ secrets.PROJECT_NAME }}"
+        
+        # First deploy the CDK stack
+        npm run deploy:dev:base -- --require-approval never
+        
+        # Debug: Check if stack exists and get outputs
+        STACK_NAME="$(echo ${{ secrets.PROJECT_NAME }} | awk '{print toupper(substr($0,1,1)) substr($0,2)}' | sed 's/-//g')-Dev"
+        echo "Stack name: ${STACK_NAME}"
+        
+        if aws cloudformation describe-stacks --stack-name $STACK_NAME --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} >/dev/null 2>&1; then
+          echo "Stack exists, getting outputs..."
+          aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[*].[OutputKey,OutputValue]' --output table --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }}
+        fi
+        
+        # Then update the frontend configuration with the API endpoint
+        npm run update-config:dev
 
     - name: Deploy to staging (staging branch)
       if: github.ref == 'refs/heads/staging'
-      run: npm run deploy:staging -- --require-approval never
+      run: |
+        # First deploy the CDK stack
+        npm run deploy:staging:base -- --require-approval never
+        # Then update the frontend configuration with the API endpoint
+        npm run update-config:staging
 
     - name: Deploy to prod (production branch)
       if: github.ref == 'refs/heads/production'
-      run: npm run deploy:prod -- --require-approval never
-
-    - name: Configure frontend with API endpoint
       run: |
-        # Get stack name and environment based on branch
-        if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-          STACK_NAME="${{ secrets.PROJECT_NAME }}-dev"
-          ENV="dev"
-          API_ENDPOINT="${{ secrets.API_ENDPOINT_DEV || '' }}"
-        elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
-          STACK_NAME="${{ secrets.PROJECT_NAME }}-staging"
-          ENV="staging"
-          API_ENDPOINT="${{ secrets.API_ENDPOINT_STAGING || '' }}"
-        elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
-          STACK_NAME="${{ secrets.PROJECT_NAME }}-prod"
-          ENV="prod"
-          API_ENDPOINT="${{ secrets.API_ENDPOINT_PROD || '' }}"
-        fi
-        
-        # Check if stack exists
-        if aws cloudformation describe-stacks --stack-name $STACK_NAME --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} >/dev/null 2>&1; then
-          echo "Stack $STACK_NAME exists"
-          
-          # If environment-specific API_ENDPOINT is not set in secrets, get it from stack output
-          if [ -z "$API_ENDPOINT" ]; then
-            API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} || echo "")
-          fi
-          
-          # Create api-config.js with the API endpoint
-          cat > frontend/js/api-config.js << EOF
-        // Auto-generated during deployment - DO NOT EDIT
-        window.API_CONFIG = {
-          apiEndpoint: '$API_ENDPOINT',
-          isManaged: true
-        };
-        EOF
-          
-          # Get S3 bucket name (without account ID to match CDK stack)
-          BUCKET_NAME="${{ secrets.PROJECT_NAME }}-frontend-${ENV}"
-          
-          # Check if bucket exists before syncing
-          if aws s3 ls "s3://$BUCKET_NAME" >/dev/null 2>&1; then
-            echo "Syncing frontend to S3 bucket: $BUCKET_NAME"
-            
-            # Upload updated frontend
-            aws s3 sync frontend/ s3://$BUCKET_NAME/ --delete
-            
-            # Invalidate CloudFront cache
-            DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} || echo "")
-            if [ ! -z "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
-              echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
-              aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
-            fi
-          else
-            echo "Warning: S3 bucket $BUCKET_NAME not found. Skipping frontend sync."
-          fi
-        else
-          echo "Stack $STACK_NAME does not exist yet. This might be the first deployment."
-          echo "Frontend configuration will be handled in the next deployment."
-        fi
+        # First deploy the CDK stack
+        npm run deploy:prod:base -- --require-approval never
+        # Then update the frontend configuration with the API endpoint
+        npm run update-config:prod
 
-    - name: Show outputs
+    - name: Show deployment outputs
       run: |
         echo "Deployment completed!"
         echo "Check AWS CloudFormation console for stack outputs"

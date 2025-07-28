@@ -68,6 +68,10 @@ fullstack-serverless-cdk/
 │   │   └── config.js         # 設定ファイル
 │   ├── index.html             # メインページ
 │   └── error.html             # エラーページ
+├── scripts/                    # デプロイメントスクリプト
+│   ├── update-frontend-config.sh  # API設定更新スクリプト
+│   ├── get-api-endpoint.sh        # APIエンドポイント取得スクリプト
+│   └── README.md                  # スクリプトのドキュメント
 ├── docs/                       # ドキュメント
 │   └── *.md                   # 各種ガイドドキュメント
 ├── cdk.json                   # CDK設定
@@ -275,13 +279,32 @@ npm run deploy:dev -- --require-approval never
 
 #### 自動設定（推奨）
 デプロイ時に自動的にAPI URLが設定されます：
-- CloudFormationスタックから自動取得（デフォルト）
-- GitHub Secretsで環境別に指定も可能：
-  - `API_ENDPOINT_DEV` - 開発環境用
-  - `API_ENDPOINT_STAGING` - ステージング環境用
-  - `API_ENDPOINT_PROD` - 本番環境用
+- **2段階プロセス**で確実に設定：
+  1. CDKでインフラをデプロイ
+  2. API エンドポイントを取得してフロントエンドを更新
+- `npm run deploy:[env]` コマンドがこれを自動実行
 
-#### 手動設定
+#### デプロイプロセスの詳細
+```bash
+# 開発環境へのデプロイ（自動でAPI設定も実行）
+npm run deploy:dev
+
+# 内部では以下が実行される：
+# 1. CDKデプロイ: npm run deploy:dev:base
+# 2. API設定更新: npm run update-config:dev
+```
+
+#### スクリプトツール
+`scripts/` ディレクトリに便利なツールを用意：
+- `update-frontend-config.sh` - フロントエンドのAPI設定を更新
+- `get-api-endpoint.sh` - デプロイ済みスタックからAPIエンドポイントを取得
+
+```bash
+# APIエンドポイントの確認とローカル設定の更新
+./scripts/get-api-endpoint.sh dev
+```
+
+#### 手動設定（フォールバック）
 自動設定されていない場合：
 1. デプロイ後、CloudFront URLにアクセス
 2. 画面上部のテキストボックスにAPI Gateway URLを入力
