@@ -25,4 +25,12 @@ export function showRelativeTime() {
 window.displayCurrentTime = displayCurrentTime
 window.showRelativeTime = showRelativeTime
 
-console.log('Test module loaded successfully with dayjs version:', dayjs.version)
+console.log('Test module loaded successfully')
+console.log('dayjs is available:', typeof dayjs === 'function')
+console.log('Current time:', dayjs().format())
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    displayCurrentTime()
+    showRelativeTime()
+})
