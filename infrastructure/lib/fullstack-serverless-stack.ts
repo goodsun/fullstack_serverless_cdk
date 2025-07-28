@@ -95,8 +95,6 @@ export class FullstackServerlessStack extends cdk.Stack {
     // S3 Bucket for frontend
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       bucketName: `${projectName}-frontend-${env}-${this.account}`,
-      websiteIndexDocument: 'index.html',
-      websiteErrorDocument: 'error.html',
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
@@ -137,6 +135,12 @@ export class FullstackServerlessStack extends cdk.Stack {
       errorResponses: [
         {
           httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.minutes(5),
+        },
+        {
+          httpStatus: 403,
           responseHttpStatus: 200,
           responsePagePath: '/index.html',
           ttl: cdk.Duration.minutes(5),
