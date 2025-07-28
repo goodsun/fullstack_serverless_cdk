@@ -48,3 +48,7 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# Local development
+env.json
+.secrets

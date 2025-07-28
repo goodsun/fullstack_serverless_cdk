@@ -76,6 +76,20 @@ fullstack-serverless-cdk/
 └── README.md
 ```
 
+## 💻 開発フロー
+
+### ローカル開発（推奨）
+```bash
+# 1. ローカル環境の起動
+npm run dev:db    # DynamoDB Local起動
+npm run dev       # API + フロントエンド起動
+
+# 2. ブラウザでテスト
+# http://localhost:8080
+```
+
+詳細は[ローカル開発ガイド](docs/local-development-guide.md)を参照
+
 ## 🔧 開発コマンド
 
 ### ビルドとテスト
@@ -171,6 +185,7 @@ CDKは以下の優先順位でAWS認証情報を使用します：
 ## 📚 ドキュメント
 
 ### 主要ドキュメント
+- `docs/local-development-guide.md` - **ローカル開発ガイド**（推奨）
 - `docs/cdk-simplification-guide.md` - CDKシンプル化ガイド
 - `docs/local-cicd-sync-guide.md` - ローカル/CI-CD同期化ガイド
 - `docs/cloudfront-custom-domain-guide.md` - カスタムドメイン設定ガイド
