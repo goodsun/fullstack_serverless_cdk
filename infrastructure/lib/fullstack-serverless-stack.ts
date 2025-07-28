@@ -37,6 +37,21 @@ export class FullstackServerlessStack extends cdk.Stack {
       tableName: `${projectName}-items-${env}`,
     });
 
+    // Settings Table
+    const settingsTable = new dynamodb.Table(this, 'SettingsTable', {
+      partitionKey: {
+        name: 'settingKey',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'version',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      tableName: `${projectName}-settings-${env}`,
+    });
+
     // Lambda function for CRUD operations
     const crudLambda = new NodejsFunction(this, 'CrudHandler', {
       functionName: `${projectName}-crud-${env}`,
@@ -61,6 +76,29 @@ export class FullstackServerlessStack extends cdk.Stack {
     // Grant permissions to Lambda
     table.grantReadWriteData(crudLambda);
 
+    // Lambda function for Settings operations
+    const settingsLambda = new NodejsFunction(this, 'SettingsHandler', {
+      functionName: `${projectName}-settings-${env}`,
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'handler',
+      entry: path.join(__dirname, '../../backend/src/handlers/settings.ts'),
+      environment: {
+        SETTINGS_TABLE_NAME: settingsTable.tableName,
+        REGION: this.region,
+        ENV: env,
+      },
+      memorySize: 256,
+      timeout: cdk.Duration.seconds(30),
+      bundling: {
+        minify: env === 'prod',
+        sourceMap: env !== 'prod',
+        target: 'es2022',
+      },
+    });
+
+    // Grant permissions to Settings Lambda
+    settingsTable.grantReadWriteData(settingsLambda);
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'ItemsApi', {
       restApiName: `${projectName}-api-${env}`,
@@ -82,6 +120,7 @@ export class FullstackServerlessStack extends cdk.Stack {
 
     // Lambda integration
     const integration = new apigateway.LambdaIntegration(crudLambda);
+    const settingsIntegration = new apigateway.LambdaIntegration(settingsLambda);
 
     // API endpoints
     const items = api.root.addResource('items');
@@ -92,6 +131,12 @@ export class FullstackServerlessStack extends cdk.Stack {
     item.addMethod('GET', integration); // GET /items/{id} - Get specific item
     item.addMethod('PUT', integration); // PUT /items/{id} - Update item
     item.addMethod('DELETE', integration); // DELETE /items/{id} - Delete item
+
+    // Settings endpoints
+    const settings = api.root.addResource('settings');
+    const setting = settings.addResource('{key}');
+    setting.addMethod('GET', settingsIntegration); // GET /settings/{key}
+    setting.addMethod('PUT', settingsIntegration); // PUT /settings/{key}
 
     // S3 Bucket for frontend
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
