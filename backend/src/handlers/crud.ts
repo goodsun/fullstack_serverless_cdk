@@ -13,16 +13,24 @@ const client = new DynamoDBClient({ region: process.env.REGION });
 const docClient = DynamoDBDocumentClient.from(client);
 const tableName = process.env.TABLE_NAME!;
 
+// Common response headers
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Helper function to create response
+const createResponse = (statusCode: number, body: any): APIGatewayProxyResult => ({
+  statusCode,
+  headers: CORS_HEADERS,
+  body: JSON.stringify(body),
+});
+
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   console.log('Event:', JSON.stringify(event, null, 2));
-
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
 
   try {
     const { httpMethod, path, pathParameters, body } = event;
@@ -40,18 +48,10 @@ export const handler = async (
           );
 
           if (!getResult.Item) {
-            return {
-              statusCode: 404,
-              headers: corsHeaders,
-              body: JSON.stringify({ message: 'Item not found' }),
-            };
+            return createResponse(404, { message: 'Item not found' });
           }
 
-          return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify(getResult.Item),
-          };
+          return createResponse(200, getResult.Item);
         } else {
           // List all items
           const scanResult = await docClient.send(
@@ -60,23 +60,15 @@ export const handler = async (
             })
           );
 
-          return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify({
-              items: scanResult.Items || [],
-              count: scanResult.Count || 0,
-            }),
-          };
+          return createResponse(200, {
+            items: scanResult.Items || [],
+            count: scanResult.Count || 0,
+          });
         }
 
       case 'POST':
         if (!body) {
-          return {
-            statusCode: 400,
-            headers: corsHeaders,
-            body: JSON.stringify({ message: 'Request body is required' }),
-          };
+          return createResponse(400, { message: 'Request body is required' });
         }
 
         const newItem = JSON.parse(body);
@@ -97,21 +89,13 @@ export const handler = async (
           })
         );
 
-        return {
-          statusCode: 201,
-          headers: corsHeaders,
-          body: JSON.stringify(newItem),
-        };
+        return createResponse(201, newItem);
 
       case 'PUT':
         if (!pathParameters?.id || !body) {
-          return {
-            statusCode: 400,
-            headers: corsHeaders,
-            body: JSON.stringify({
-              message: 'Item ID and request body are required',
-            }),
-          };
+          return createResponse(400, {
+            message: 'Item ID and request body are required',
+          });
         }
 
         const updateData = JSON.parse(body);
@@ -147,19 +131,11 @@ export const handler = async (
           })
         );
 
-        return {
-          statusCode: 200,
-          headers: corsHeaders,
-          body: JSON.stringify(updateResult.Attributes),
-        };
+        return createResponse(200, updateResult.Attributes);
 
       case 'DELETE':
         if (!pathParameters?.id) {
-          return {
-            statusCode: 400,
-            headers: corsHeaders,
-            body: JSON.stringify({ message: 'Item ID is required' }),
-          };
+          return createResponse(400, { message: 'Item ID is required' });
         }
 
         await docClient.send(
@@ -169,32 +145,19 @@ export const handler = async (
           })
         );
 
-        return {
-          statusCode: 204,
-          headers: corsHeaders,
-          body: '',
-        };
+        return createResponse(204, '');
 
       default:
-        return {
-          statusCode: 405,
-          headers: corsHeaders,
-          body: JSON.stringify({ message: 'Method not allowed' }),
-        };
+        return createResponse(405, { message: 'Method not allowed' });
     }
   } catch (error) {
     console.error('Error:', error);
-    return {
-      statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: JSON.stringify({
-        message: 'Internal server error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-    };
+    return createResponse(500, {
+      message: 'Internal server error',
+      // Only expose error details in non-production environments
+      ...(process.env.ENV !== 'prod' && { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      })
+    });
   }
 };

@@ -46,10 +46,11 @@ export class FullstackServerlessStack extends cdk.Stack {
       environment: {
         TABLE_NAME: table.tableName,
         REGION: this.region,
+        ENV: env,
       },
       memorySize: 512,
       timeout: cdk.Duration.seconds(30),
-      tracing: lambda.Tracing.ACTIVE,
+      tracing: env === 'prod' ? lambda.Tracing.ACTIVE : lambda.Tracing.DISABLED,
       bundling: {
         minify: env === 'prod',
         sourceMap: env !== 'prod',
@@ -94,7 +95,7 @@ export class FullstackServerlessStack extends cdk.Stack {
 
     // S3 Bucket for frontend
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-      bucketName: `${projectName}-frontend-${env}-${this.account}`,
+      bucketName: `${projectName}-frontend-${env}`,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
