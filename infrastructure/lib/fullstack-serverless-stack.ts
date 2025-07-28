@@ -7,7 +7,6 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as logs from 'aws-cdk-lib/aws-logs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -32,7 +31,9 @@ export class FullstackServerlessStack extends cdk.Stack {
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
-      pointInTimeRecovery: env === 'prod',
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: env === 'prod',
+      },
       tableName: `${projectName}-items-${env}`,
     });
 
@@ -49,7 +50,6 @@ export class FullstackServerlessStack extends cdk.Stack {
       memorySize: 512,
       timeout: cdk.Duration.seconds(30),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: logs.RetentionDays.ONE_WEEK,
       bundling: {
         minify: env === 'prod',
         sourceMap: env !== 'prod',
@@ -122,7 +122,6 @@ export class FullstackServerlessStack extends cdk.Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         compress: true,
       },
-      // Remove API routing from CloudFront - keep it simple
       defaultRootObject: 'index.html',
       errorResponses: [
         {
