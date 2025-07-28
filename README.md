@@ -4,11 +4,17 @@
 
 フルスタックサーバーレスアプリケーションを素早く構築するためのCDKテンプレート。
 
+### 背景と価値提案
+- サーバーレスアプリケーション開発の「またゼロからCDK書くのか...」問題を解決
+- 実証済みのAWSアーキテクチャを即座に利用可能
+- 0からAPI稼働までの時間を大幅に短縮（目標: 30分以内）
+
 ### 特徴
-- Lambda + DynamoDB + S3 + CloudFrontの統合構成
-- CI/CDパイプライン事前設定
-- ベストプラクティス組み込み済み
-- モノレポ構成での管理
+- Lambda + API Gateway + DynamoDB + S3 + CloudFrontの統合構成
+- 環境別デプロイ対応（dev/staging/prod）
+- シンプルなCRUD API実装済み
+- プレーンなHTML/CSS/JSのフロントエンド（フレームワーク非依存）
+- CORS対応済み
 
 ## 🚀 クイックスタート
 
@@ -22,9 +28,6 @@ cd fullstack-serverless-cdk
 ```bash
 # 依存関係のインストール
 npm install
-
-# 環境設定ファイルの作成
-cp .env.example .env
 ```
 
 ### 3. AWS認証情報の設定
@@ -40,99 +43,92 @@ export AWS_PROFILE=your-profile-name
 
 ```
 fullstack-serverless-cdk/
-├── .github/
-│   └── workflows/
-│       ├── deploy.yml          # CI/CDパイプライン
-│       └── pr-check.yml        # PRチェック
 ├── infrastructure/             # CDKコード
 │   ├── bin/
-│   │   └── app.ts              # CDKアプリエントリポイント
-│   ├── lib/
-│   │   └── fullstack-app-stack.ts  # メインスタック定義
-│   ├── cdk.json                # CDK設定
-│   └── package.json
+│   │   └── app.ts             # CDKアプリエントリポイント
+│   └── lib/
+│       └── fullstack-serverless-stack.ts  # メインスタック定義
 ├── backend/                    # Lambda関数
-│   ├── src/
-│   │   ├── handlers/           # APIハンドラー
-│   │   ├── services/           # ビジネスロジック
-│   │   └── utils/              # ユーティリティ
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/                   # フロントエンド
-│   ├── src/
-│   ├── public/
-│   └── package.json
+│   └── src/
+│       └── handlers/          # APIハンドラー
+│           └── crud.ts        # CRUD操作ハンドラー
+├── frontend/                   # フロントエンド（プレーンHTML/CSS/JS）
+│   ├── assets/                # 画像等のアセット
+│   ├── css/                   # スタイルシート
+│   │   └── style.css
+│   ├── js/                    # JavaScriptファイル
+│   │   ├── api.js            # APIクライアント
+│   │   ├── app.js            # メインアプリケーション
+│   │   └── config.js         # 設定ファイル
+│   ├── index.html             # メインページ
+│   └── error.html             # エラーページ
 ├── docs/                       # ドキュメント
-│   ├── cdk-simplification-guide.md
-│   ├── cloudfront-custom-domain-guide.md
-│   ├── local-cicd-sync-guide.md
-│   └── fullstack-serverless-template.md
-├── scripts/                    # ビルド・デプロイスクリプト
+│   └── *.md                   # 各種ガイドドキュメント
+├── cdk.json                   # CDK設定
 ├── package.json               # ルートpackage.json
-├── .env.example               # 環境変数テンプレート
+├── tsconfig.json              # TypeScript設定
 └── README.md
 ```
 
 ## 🔧 開発コマンド
 
-### ローカル開発
+### ビルドとテスト
 ```bash
-# 全依存関係のインストール
-npm run install:all
-
-# ビルド
+# TypeScriptのビルド
 npm run build
 
-# テスト
+# ビルドの監視モード
+npm run watch
+
+# テスト（※テストコードは今後実装予定）
 npm run test
-
-# Lintチェック
-npm run lint
-
-# 型チェック
-npm run typecheck
 ```
 
-### デプロイ
+### CDKコマンド
 ```bash
-# 開発環境へのデプロイ
-npm run deploy:dev
+# CDK合成（CloudFormationテンプレート生成）
+npm run synth
 
-# ステージング環境へのデプロイ
-npm run deploy:staging
+# 変更内容の確認
+npm run diff
 
-# 本番環境へのデプロイ（GitHub Actions推奨）
-npm run deploy:prod
+# デプロイ
+npm run deploy:dev      # 開発環境
+npm run deploy:staging  # ステージング環境
+npm run deploy:prod     # 本番環境
 
 # スタックの削除
-npm run destroy:dev
+npm run destroy
 ```
 
 ## 🌐 エンドポイント
 
-デプロイ後、以下のURLでアクセス可能：
+デプロイ後、CDKの出力に以下のURLが表示されます：
 
-- **CloudFront URL**: `https://d1234abcd5678.cloudfront.net`
-- **API Gateway URL**: `https://xxxxxxxxxx.execute-api.region.amazonaws.com/stage`
+- **CloudFront URL**: CloudFrontのディストリビューションURL（フロントエンド）
+- **API Gateway URL**: API GatewayのエンドポイントURL（バックエンド）
+- **DynamoDB Table Name**: 作成されたDynamoDBテーブル名
+
+### API仕様
+- `GET /items` - 全アイテムの取得
+- `POST /items` - 新規アイテムの作成
+- `GET /items/{id}` - 特定アイテムの取得
+- `PUT /items/{id}` - アイテムの更新
+- `DELETE /items/{id}` - アイテムの削除
 
 ## 🔒 セキュリティ設定
 
-### GitHub Secretsの設定
-以下のSecretsをGitHubリポジトリに設定：
+### AWS認証
+CDKは以下の優先順位でAWS認証情報を使用します：
+1. 環境変数（`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`）
+2. AWS Profile（`AWS_PROFILE`環境変数または`--profile`オプション）
+3. デフォルトプロファイル
 
-```
-AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-```
-
-### 環境変数
-`.env`ファイルに以下を設定：
-
-```bash
-STAGE=dev
-AWS_REGION=us-east-1
-AWS_PROFILE=your-profile
-```
+### 現在実装済みのセキュリティ機能
+- S3バケットのパブリックアクセスブロック
+- CloudFront Origin Access Identity (OAI)
+- HTTPSリダイレクト
+- API GatewayのCORS設定
 
 ## 📚 ドキュメント
 
@@ -142,46 +138,56 @@ AWS_PROFILE=your-profile
 - `docs/cloudfront-custom-domain-guide.md` - カスタムドメイン設定ガイド
 - `docs/fullstack-serverless-template.md` - テンプレート詳細
 
-## 🔄 CI/CDパイプライン
+## 🔄 CI/CDパイプライン（今後実装予定）
 
-### 自動デプロイフロー
-1. `develop`ブランチへのpush → `dev`環境へ自動デプロイ
-2. `main`ブランチへのpush → `prod`環境へ自動デプロイ
-3. 手動トリガーで任意の環境へデプロイ可能
+GitHub Actionsを使用した自動デプロイパイプラインの実装を予定しています。
+詳細は`docs/local-cicd-sync-guide.md`を参照してください。
 
-### パイプライン構成
-1. **Test Job**: テスト・Lint・型チェック
-2. **Build Job**: フロントエンド・バックエンドのビルド
-3. **Deploy Job**: CDKデプロイ → S3同期 → CloudFront無効化
+## ✅ 初回セットアップチェックリスト
 
-## ✅ チェックリスト
-
-### 初回セットアップ
+- [ ] Node.js 20.x以上のインストール
+- [ ] AWS CLIのインストールと設定
 - [ ] リポジトリのクローン
-- [ ] 依存関係のインストール
+- [ ] `npm install`の実行
 - [ ] AWS認証情報の設定
-- [ ] 環境変数の設定
-- [ ] GitHub Secretsの設定
+- [ ] 初回CDKブートストラップの実行（必要な場合）
+  ```bash
+  npx cdk bootstrap
+  ```
 
-### デプロイ前確認
-- [ ] ビルドが成功するか
-- [ ] テストがパスするか
-- [ ] Lintエラーがないか
-- [ ] 型エラーがないか
+## 📚 関連ドキュメント
+
+- [プロジェクトロードマップ](docs/ROADMAP.md)
+- [ベストプラクティス](docs/guides/best-practices.md)
+- [CDKシンプル化ガイド](docs/guides/cdk-simplification.md)
+- [ローカル/CI-CD同期ガイド](docs/guides/local-cicd-sync.md)
 
 ## 🎆 次のステップ
 
-1. **フロントエンドの実装**
-   - React/Vue/Next.jsの選択
-   - UIコンポーネントの作成
+### 現在実装済み
+- ✅ 基本的なCRUD API
+- ✅ シンプルなフロントエンド
+- ✅ DynamoDBとの連携
+- ✅ CloudFront配信
 
-2. **APIの実装**
-   - RESTful APIの設計
-   - 認証・認可の実装
+### 今後の拡張案
+1. **認証・認可の追加**
+   - AWS Cognitoの統合
+   - APIキー認証
 
-3. **カスタムドメインの設定**
-   - SSL証明書の取得
-   - CloudFrontの設定更新
+2. **フロントエンドのアップグレード**
+   - お好みのフレームワーク（React/Vue/Next.js等）への移行
+   - より高度なUIの実装
+
+3. **機能拡張**
+   - ファイルアップロード（S3統合）
+   - リアルタイム更新（WebSocket/AppSync）
+   - 検索機能（OpenSearch統合）
+
+4. **運用機能**
+   - CloudWatchダッシュボード
+   - X-Rayトレーシング
+   - CI/CDパイプライン
 
 ## 👥 コントリビュート
 
