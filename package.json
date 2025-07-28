@@ -11,6 +11,9 @@
     "deploy:staging": "cdk deploy --context env=staging",
     "deploy:prod": "cdk deploy --context env=prod",
     "destroy": "cdk destroy",
+    "destroy:dev": "cdk destroy --context env=dev",
+    "destroy:staging": "cdk destroy --context env=staging",
+    "destroy:prod": "cdk destroy --context env=prod",
     "synth": "cdk synth",
     "diff": "cdk diff"
   },

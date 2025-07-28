@@ -104,7 +104,9 @@ npm run deploy:staging  # ステージング環境
 npm run deploy:prod     # 本番環境
 
 # スタックの削除
-npm run destroy
+npm run destroy:dev     # 開発環境
+npm run destroy:staging # ステージング環境
+npm run destroy:prod    # 本番環境
 ```
 
 ## 🌐 エンドポイントとリソース名
