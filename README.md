@@ -200,17 +200,17 @@ GitHub Actionsを使用した自動デプロイパイプラインの実装を予
 - [CDKシンプル化ガイド](docs/guides/cdk-simplification.md)
 - [ローカル/CI-CD同期ガイド](docs/guides/local-cicd-sync.md)
 
-## ⚠️ 既知の問題
+## 🔧 使用方法
 
-### CloudFront API転送の問題
-現在、CloudFrontの `/api/*` パスがAPI Gatewayに正しく転送されない問題があります。
+### 初回セットアップ
+1. デプロイ後、CloudFront URLにアクセス
+2. 画面上部のテキストボックスにAPI Gateway URLを入力
+   - デプロイ時に出力される `ApiEndpoint` の値を使用
+   - 例: `https://xxx.execute-api.region.amazonaws.com/dev`
+3. 「Save」ボタンをクリック
+4. ページがリロードされ、CRUD操作が可能になります
 
-**一時的な回避策**:
-- API Gateway URLを直接使用: デプロイ出力の `ApiEndpoint` URL
-- 例: `https://xxx.execute-api.region.amazonaws.com/dev/`
-
-**根本的な解決方法（調査中）**:
-RestApiOriginの設定を見直し中
+※ API URLはブラウザのlocalStorageに保存されるため、次回以降は自動的に使用されます
 
 ## 🎆 次のステップ
 
