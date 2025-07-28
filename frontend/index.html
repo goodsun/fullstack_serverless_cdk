@@ -58,6 +58,12 @@
 
         <footer>
             <p>Powered by AWS CDK, Lambda, API Gateway & DynamoDB</p>
+            <div style="margin-top: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
+                <p id="current-time">Loading time...</p>
+                <p id="relative-time">Loading relative time...</p>
+                <button onclick="displayCurrentTime()">Update Time</button>
+                <button onclick="showRelativeTime()">Show Relative Time</button>
+            </div>
         </footer>
     </div>
 
@@ -65,5 +71,8 @@
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
+    
+    <!-- Test Vite module loading -->
+    <script type="module" src="js/test-module.js"></script>
 </body>
 </html>
