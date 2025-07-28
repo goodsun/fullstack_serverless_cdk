@@ -94,9 +94,8 @@ jobs:
         };
         EOF
           
-          # Get S3 bucket name with account ID
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          BUCKET_NAME="${{ secrets.PROJECT_NAME }}-frontend-${ENV}-${ACCOUNT_ID}"
+          # Get S3 bucket name (without account ID to match CDK stack)
+          BUCKET_NAME="${{ secrets.PROJECT_NAME }}-frontend-${ENV}"
           
           # Check if bucket exists before syncing
           if aws s3 ls "s3://$BUCKET_NAME" >/dev/null 2>&1; then
