@@ -22,26 +22,29 @@ const stackPrefix = projectName
   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
   .join('');
 
+// Helper function to get AWS region
+const getRegion = () => process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
+
 // Environment specific configuration
 const envConfig = {
   dev: {
     env: {
       account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1',
+      region: getRegion(),
     },
     stackName: `${stackPrefix}-Dev`,
   },
   staging: {
     env: {
       account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1',
+      region: getRegion(),
     },
     stackName: `${stackPrefix}-Staging`,
   },
   prod: {
     env: {
       account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: process.env.CDK_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1',
+      region: getRegion(),
     },
     stackName: `${stackPrefix}-Prod`,
   },

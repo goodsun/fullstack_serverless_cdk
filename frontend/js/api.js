@@ -4,6 +4,11 @@ class ApiClient {
         this.baseUrl = baseUrl;
     }
 
+    // Helper function to construct item path
+    getItemPath(id) {
+        return id ? `${CONFIG.ITEMS_PATH}/${id}` : CONFIG.ITEMS_PATH;
+    }
+
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
         
@@ -49,7 +54,7 @@ class ApiClient {
 
     // Get single item
     async getItem(id) {
-        return this.request(`${CONFIG.ITEMS_PATH}/${id}`);
+        return this.request(this.getItemPath(id));
     }
 
     // Create new item
@@ -62,7 +67,7 @@ class ApiClient {
 
     // Update existing item
     async updateItem(id, data) {
-        return this.request(`${CONFIG.ITEMS_PATH}/${id}`, {
+        return this.request(this.getItemPath(id), {
             method: 'PUT',
             body: JSON.stringify(data),
         });
@@ -70,7 +75,7 @@ class ApiClient {
 
     // Delete item
     async deleteItem(id) {
-        return this.request(`${CONFIG.ITEMS_PATH}/${id}`, {
+        return this.request(this.getItemPath(id), {
             method: 'DELETE',
         });
     }

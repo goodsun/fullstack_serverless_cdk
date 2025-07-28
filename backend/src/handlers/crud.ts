@@ -8,6 +8,7 @@ import {
   ScanCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { HTTP_STATUS, ERROR_MESSAGES, generateTimestamp } from '../constants';
 
 const client = new DynamoDBClient({ region: process.env.REGION });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -48,10 +49,10 @@ export const handler = async (
           );
 
           if (!getResult.Item) {
-            return createResponse(404, { message: 'Item not found' });
+            return createResponse(HTTP_STATUS.NOT_FOUND, { message: ERROR_MESSAGES.ITEM_NOT_FOUND });
           }
 
-          return createResponse(200, getResult.Item);
+          return createResponse(HTTP_STATUS.OK, getResult.Item);
         } else {
           // List all items
           const scanResult = await docClient.send(
@@ -60,7 +61,7 @@ export const handler = async (
             })
           );
 
-          return createResponse(200, {
+          return createResponse(HTTP_STATUS.OK, {
             items: scanResult.Items || [],
             count: scanResult.Count || 0,
           });
@@ -68,7 +69,7 @@ export const handler = async (
 
       case 'POST':
         if (!body) {
-          return createResponse(400, { message: 'Request body is required' });
+          return createResponse(HTTP_STATUS.BAD_REQUEST, { message: ERROR_MESSAGES.BODY_REQUIRED });
         }
 
         const newItem = JSON.parse(body);
@@ -79,8 +80,9 @@ export const handler = async (
         }
         
         // Add timestamp
-        newItem.createdAt = new Date().toISOString();
-        newItem.updatedAt = newItem.createdAt;
+        const timestamp = generateTimestamp();
+        newItem.createdAt = timestamp;
+        newItem.updatedAt = timestamp;
 
         await docClient.send(
           new PutCommand({
@@ -89,12 +91,12 @@ export const handler = async (
           })
         );
 
-        return createResponse(201, newItem);
+        return createResponse(HTTP_STATUS.CREATED, newItem);
 
       case 'PUT':
         if (!pathParameters?.id || !body) {
-          return createResponse(400, {
-            message: 'Item ID and request body are required',
+          return createResponse(HTTP_STATUS.BAD_REQUEST, {
+            message: ERROR_MESSAGES.ID_AND_BODY_REQUIRED,
           });
         }
 
@@ -118,7 +120,7 @@ export const handler = async (
         // Add updatedAt
         updateExpressionParts.push('#updatedAt = :updatedAt');
         expressionAttributeNames['#updatedAt'] = 'updatedAt';
-        expressionAttributeValues[':updatedAt'] = new Date().toISOString();
+        expressionAttributeValues[':updatedAt'] = generateTimestamp();
 
         const updateResult = await docClient.send(
           new UpdateCommand({
@@ -131,11 +133,11 @@ export const handler = async (
           })
         );
 
-        return createResponse(200, updateResult.Attributes);
+        return createResponse(HTTP_STATUS.OK, updateResult.Attributes);
 
       case 'DELETE':
         if (!pathParameters?.id) {
-          return createResponse(400, { message: 'Item ID is required' });
+          return createResponse(HTTP_STATUS.BAD_REQUEST, { message: ERROR_MESSAGES.ID_REQUIRED });
         }
 
         await docClient.send(
@@ -145,15 +147,15 @@ export const handler = async (
           })
         );
 
-        return createResponse(204, '');
+        return createResponse(HTTP_STATUS.NO_CONTENT, '');
 
       default:
-        return createResponse(405, { message: 'Method not allowed' });
+        return createResponse(HTTP_STATUS.METHOD_NOT_ALLOWED, { message: ERROR_MESSAGES.METHOD_NOT_ALLOWED });
     }
   } catch (error) {
     console.error('Error:', error);
-    return createResponse(500, {
-      message: 'Internal server error',
+    return createResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+      message: ERROR_MESSAGES.INTERNAL_ERROR,
       // Only expose error details in non-production environments
       ...(process.env.ENV !== 'prod' && { 
         error: error instanceof Error ? error.message : 'Unknown error' 
