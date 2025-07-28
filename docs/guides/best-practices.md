@@ -155,6 +155,43 @@ table.grantReadWriteData(lambdaFunction); // 特定のテーブルのみ
 - X-Ray トレーシングの有効化
 - 構造化ログによる検索性向上
 
+## 11. 環境変数によるプロジェクト管理
+
+### プロジェクト名の環境変数管理
+複数のプロジェクトで同じテンプレートを使用する場合の必須設定：
+
+```bash
+# .env.example
+PROJECT_NAME=my-awesome-app
+```
+
+### 実装方法
+```typescript
+// CDKでの環境変数読み込み
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+const projectName = process.env.PROJECT_NAME || 'default-app';
+```
+
+### メリット
+- 同一テンプレートで複数プロジェクトを管理可能
+- リソース名の衝突を防止
+- CI/CDパイプラインでの自動化が容易
+- チーム開発での設定共有が簡単
+
+### 命名規則の統一
+```
+スタック名: {ProjectName}-{Env}
+リソース名: {project-name}-{resource}-{env}
+```
+
+### GitHub Actionsでの設定
+```yaml
+env:
+  PROJECT_NAME: ${{ secrets.PROJECT_NAME }}
+```
+
 ## まとめ
 
 これらのベストプラクティスは、実際のプロジェクト運用から得られた知見です。

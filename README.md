@@ -28,6 +28,12 @@ cd fullstack-serverless-cdk
 ```bash
 # 依存関係のインストール
 npm install
+
+# 環境変数ファイルの作成
+cp .env.example .env
+
+# .envファイルを編集してプロジェクト名を設定
+# PROJECT_NAME=my-awesome-app
 ```
 
 ### 3. AWS認証情報の設定
@@ -101,8 +107,17 @@ npm run deploy:prod     # 本番環境
 npm run destroy
 ```
 
-## 🌐 エンドポイント
+## 🌐 エンドポイントとリソース名
 
+### リソースの命名規則
+すべてのリソースはプロジェクト名を接頭辞として使用します：
+- **スタック名**: `{ProjectName}-{Env}` （例: MyAwesomeApp-Dev）
+- **DynamoDBテーブル**: `{project-name}-items-{env}`
+- **Lambda関数**: `{project-name}-crud-{env}`
+- **API Gateway**: `{project-name}-api-{env}`
+- **S3バケット**: `{project-name}-frontend-{env}-{account-id}`
+
+### デプロイ後の出力
 デプロイ後、CDKの出力に以下のURLが表示されます：
 
 - **CloudFront URL**: CloudFrontのディストリビューションURL（フロントエンド）
@@ -115,6 +130,27 @@ npm run destroy
 - `GET /items/{id}` - 特定アイテムの取得
 - `PUT /items/{id}` - アイテムの更新
 - `DELETE /items/{id}` - アイテムの削除
+
+## ⚙️ 環境変数設定
+
+### 必須の環境変数
+```bash
+# .envファイルに設定
+PROJECT_NAME=my-serverless-app  # プロジェクト固有の名前（小文字とハイフン）
+```
+
+### オプションの環境変数
+```bash
+AWS_REGION=us-east-1           # AWSリージョン（デフォルト: us-east-1）
+AWS_PROFILE=default            # AWS CLIプロファイル名
+```
+
+### GitHub Actionsでの設定（CI/CD使用時）
+GitHub Secretsに以下を設定：
+- `PROJECT_NAME`: プロジェクト名
+- `AWS_ACCESS_KEY_ID`: AWSアクセスキー
+- `AWS_SECRET_ACCESS_KEY`: AWSシークレットキー
+- `AWS_REGION`: AWSリージョン（オプション）
 
 ## 🔒 セキュリティ設定
 

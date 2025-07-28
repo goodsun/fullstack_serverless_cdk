@@ -12,12 +12,17 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
+export interface FullstackServerlessStackProps extends cdk.StackProps {
+  projectName: string;
+}
+
 export class FullstackServerlessStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: FullstackServerlessStackProps) {
     super(scope, id, props);
 
-    // Environment variable
+    // Get configuration from props and context
     const env = this.node.tryGetContext('env') || 'dev';
+    const projectName = props.projectName;
 
     // DynamoDB Table
     const table = new dynamodb.Table(this, 'ItemsTable', {
@@ -28,11 +33,12 @@ export class FullstackServerlessStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: env === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       pointInTimeRecovery: env === 'prod',
-      tableName: `items-table-${env}`,
+      tableName: `${projectName}-items-${env}`,
     });
 
     // Lambda function for CRUD operations
     const crudLambda = new NodejsFunction(this, 'CrudHandler', {
+      functionName: `${projectName}-crud-${env}`,
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../../backend/src/handlers/crud.ts'),
@@ -56,7 +62,7 @@ export class FullstackServerlessStack extends cdk.Stack {
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'ItemsApi', {
-      restApiName: `items-api-${env}`,
+      restApiName: `${projectName}-api-${env}`,
       description: 'API for CRUD operations',
       deployOptions: {
         stageName: env,
@@ -88,7 +94,7 @@ export class FullstackServerlessStack extends cdk.Stack {
 
     // S3 Bucket for frontend
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-      bucketName: `fullstack-serverless-frontend-${env}-${this.account}`,
+      bucketName: `${projectName}-frontend-${env}-${this.account}`,
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'error.html',
       publicReadAccess: false,
