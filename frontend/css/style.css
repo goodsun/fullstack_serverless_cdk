@@ -298,3 +298,42 @@ footer {
 .settings-link:hover {
     background-color: #545b62;
 }
+
+/* Web3 Section */
+.web3-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.wallet-button {
+    background-color: #7c3aed;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.wallet-button:hover {
+    background-color: #6d28d9;
+}
+
+.wallet-info {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.wallet-address {
+    background-color: #f3f4f6;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
+.wallet-error {
+    color: #ef4444;
+    margin-top: 10px;
+    font-size: 14px;
+}
