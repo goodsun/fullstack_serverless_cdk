@@ -122,27 +122,19 @@ export class FullstackServerlessStack extends cdk.Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         compress: true,
       },
-      additionalBehaviors: {
-        '/api/*': {
-          origin: new origins.RestApiOrigin(api),
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-        },
-      },
+      // Remove API routing from CloudFront - keep it simple
       defaultRootObject: 'index.html',
       errorResponses: [
         {
           httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
+          responseHttpStatus: 404,
+          responsePagePath: '/error.html',
           ttl: cdk.Duration.minutes(5),
         },
         {
           httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
+          responseHttpStatus: 403,
+          responsePagePath: '/error.html',
           ttl: cdk.Duration.minutes(5),
         },
       ],

@@ -1,7 +1,7 @@
 // Configuration for the frontend app
 const CONFIG = {
-    // API endpoint will be dynamically determined
-    API_ENDPOINT: window.location.origin + '/api',
+    // API endpoint from localStorage or empty
+    API_ENDPOINT: localStorage.getItem('apiEndpoint') || '',
     
     // API paths
     ITEMS_PATH: '/items',

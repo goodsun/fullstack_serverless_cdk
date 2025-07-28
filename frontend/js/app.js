@@ -165,8 +165,28 @@ class App {
     }
 }
 
+// Save API endpoint
+function saveApiEndpoint() {
+    const input = document.getElementById('apiEndpoint');
+    const endpoint = input.value.trim();
+    
+    if (endpoint) {
+        localStorage.setItem('apiEndpoint', endpoint);
+        location.reload();
+    }
+}
+
+// Make it global
+window.saveApiEndpoint = saveApiEndpoint;
+
 // Initialize app when DOM is ready
 let app;
 document.addEventListener('DOMContentLoaded', () => {
+    // Show current API endpoint if set
+    const savedEndpoint = localStorage.getItem('apiEndpoint');
+    if (savedEndpoint) {
+        document.getElementById('apiEndpoint').value = savedEndpoint;
+    }
+    
     app = new App();
 });

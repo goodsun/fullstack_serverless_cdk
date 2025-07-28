@@ -200,6 +200,18 @@ GitHub Actionsを使用した自動デプロイパイプラインの実装を予
 - [CDKシンプル化ガイド](docs/guides/cdk-simplification.md)
 - [ローカル/CI-CD同期ガイド](docs/guides/local-cicd-sync.md)
 
+## ⚠️ 既知の問題
+
+### CloudFront API転送の問題
+現在、CloudFrontの `/api/*` パスがAPI Gatewayに正しく転送されない問題があります。
+
+**一時的な回避策**:
+- API Gateway URLを直接使用: デプロイ出力の `ApiEndpoint` URL
+- 例: `https://xxx.execute-api.region.amazonaws.com/dev/`
+
+**根本的な解決方法（調査中）**:
+RestApiOriginの設定を見直し中
+
 ## 🎆 次のステップ
 
 ### 現在実装済み
