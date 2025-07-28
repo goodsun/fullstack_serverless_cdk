@@ -282,3 +282,19 @@ footer {
 .api-config button:hover {
     background: var(--success-hover);
 }
+
+/* Settings Link */
+.settings-link {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 8px 16px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.settings-link:hover {
+    background-color: #545b62;
+}

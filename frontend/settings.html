@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Fullstack Serverless App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>System Settings</h1>
+            <nav>
+                <a href="index.html" class="btn-secondary">← Back to App</a>
+            </nav>
+        </header>
+
+        <main>
+            <div id="settings-loading" class="loading">Loading settings...</div>
+            <div id="settings-error" class="error" style="display: none;"></div>
+            
+            <form id="settingsForm" style="display: none;">
+                <!-- Web3 Configuration -->
+                <section class="settings-section">
+                    <h2>Web3 Configuration</h2>
+                    
+                    <div class="form-group">
+                        <label for="reownProjectId">Reown Project ID</label>
+                        <input type="text" id="reownProjectId" name="reownProjectId" 
+                               placeholder="Enter your project ID from cloud.walletconnect.com">
+                        <small>Required for wallet connections</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableWalletConnect" name="enableWalletConnect">
+                            Enable Wallet Connect
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Supported Chains</label>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" name="chains" value="1">
+                                Ethereum Mainnet
+                            </label>
+                            <label>
+                                <input type="checkbox" name="chains" value="137">
+                                Polygon
+                            </label>
+                            <label>
+                                <input type="checkbox" name="chains" value="42161">
+                                Arbitrum
+                            </label>
+                            <label>
+                                <input type="checkbox" name="chains" value="11155111">
+                                Sepolia (Testnet)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="defaultChainId">Default Chain</label>
+                        <select id="defaultChainId" name="defaultChainId">
+                            <option value="1">Ethereum Mainnet</option>
+                            <option value="137">Polygon</option>
+                            <option value="42161">Arbitrum</option>
+                            <option value="11155111">Sepolia (Testnet)</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Feature Flags -->
+                <section class="settings-section">
+                    <h2>Features</h2>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="requireAuthentication" name="requireAuthentication">
+                            Require Authentication for CRUD Operations
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="maintenanceMode" name="maintenanceMode">
+                            Maintenance Mode
+                        </label>
+                        <small>When enabled, only admins can access the application</small>
+                    </div>
+                </section>
+
+                <!-- Admin Configuration -->
+                <section class="settings-section">
+                    <h2>Administrator Settings</h2>
+                    
+                    <div class="form-group">
+                        <label for="adminAddresses">Admin Wallet Addresses</label>
+                        <textarea id="adminAddresses" name="adminAddresses" rows="4" 
+                                  placeholder="Enter wallet addresses, one per line&#10;0x1234...&#10;0x5678..."></textarea>
+                        <small>These addresses will have admin privileges</small>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Settings</button>
+                    <button type="button" class="btn-secondary" onclick="loadSettings()">Reset</button>
+                </div>
+            </form>
+        </main>
+
+        <footer>
+            <p>Settings are stored in DynamoDB and applied in real-time</p>
+        </footer>
+    </div>
+
+    <script src="js/api-config.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>
