@@ -25,11 +25,17 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
-    - name: Install dependencies
+    - name: Install root dependencies
       run: npm ci
 
-    - name: Build
+    - name: Install frontend dependencies
+      run: cd frontend && npm ci
+
+    - name: Build backend
       run: npm run build
+
+    - name: Build frontend
+      run: npm run build:frontend
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -58,6 +64,7 @@ jobs:
         echo "PROJECT_NAME: ${{ secrets.PROJECT_NAME }}"
         
         # First deploy the CDK stack
+        # Frontend is already built by npm run build:frontend
         npm run deploy:dev:base -- --require-approval never
         
         # Debug: Check if stack exists and get outputs
@@ -76,6 +83,7 @@ jobs:
       if: github.ref == 'refs/heads/staging'
       run: |
         # First deploy the CDK stack
+        # Frontend is already built by npm run build:frontend
         npm run deploy:staging:base -- --require-approval never
         # Then update the frontend configuration with the API endpoint
         npm run update-config:staging
@@ -84,6 +92,7 @@ jobs:
       if: github.ref == 'refs/heads/production'
       run: |
         # First deploy the CDK stack
+        # Frontend is already built by npm run build:frontend
         npm run deploy:prod:base -- --require-approval never
         # Then update the frontend configuration with the API endpoint
         npm run update-config:prod

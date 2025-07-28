@@ -189,8 +189,13 @@ export class FullstackServerlessStack extends cdk.Stack {
     });
 
     // Deploy frontend files to S3
+    // If dist directory exists (after build), deploy from there. Otherwise, deploy from frontend
+    const frontendPath = path.join(__dirname, '../../frontend');
+    const distPath = path.join(frontendPath, 'dist');
+    const deployPath = require('fs').existsSync(distPath) ? distPath : frontendPath;
+    
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../frontend'))],
+      sources: [s3deploy.Source.asset(deployPath)],
       destinationBucket: websiteBucket,
       distribution,
       distributionPaths: ['/*'],
