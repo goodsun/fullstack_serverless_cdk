@@ -176,10 +176,61 @@ CDKは以下の優先順位でAWS認証情報を使用します：
 - `docs/cloudfront-custom-domain-guide.md` - カスタムドメイン設定ガイド
 - `docs/fullstack-serverless-template.md` - テンプレート詳細
 
-## 🔄 CI/CDパイプライン（今後実装予定）
+## 🔄 CI/CDパイプライン
 
-GitHub Actionsを使用した自動デプロイパイプラインの実装を予定しています。
-詳細は`docs/local-cicd-sync-guide.md`を参照してください。
+### GitHub Actionsの設定
+
+1. **GitHubリポジトリのSecrets設定**
+   
+   Settings → Secrets and variables → Actions → New repository secret
+   
+   以下のシークレットを追加：
+   ```
+   AWS_ACCESS_KEY_ID       # 必須: AWS IAMユーザーのアクセスキー
+   AWS_SECRET_ACCESS_KEY   # 必須: AWS IAMユーザーのシークレットキー
+   PROJECT_NAME            # 必須: プロジェクト名（例: my-app）
+   AWS_REGION              # オプション: リージョン（デフォルト: ap-northeast-1）
+   ```
+
+2. **IAMユーザーの必要な権限**
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": [
+           "cloudformation:*",
+           "s3:*",
+           "lambda:*",
+           "apigateway:*",
+           "dynamodb:*",
+           "cloudfront:*",
+           "iam:*",
+           "logs:*"
+         ],
+         "Resource": "*"
+       }
+     ]
+   }
+   ```
+   ※ 本番環境では最小権限の原則に従って調整してください
+
+3. **自動デプロイの動作**
+   - `develop`ブランチへのプッシュ → 開発環境（dev）へデプロイ
+   - `staging`ブランチへのプッシュ → ステージング環境へデプロイ
+   - `production`ブランチへのプッシュ → 本番環境（prod）へデプロイ
+
+### ローカルとCI/CDの完全一致
+
+**重要**: ローカルで実行するコマンドとGitHub Actionsで実行するコマンドは完全に同一です。
+```bash
+# ローカル
+npm run deploy:dev
+
+# GitHub Actions（.github/workflows/deploy.yml）
+npm run deploy:dev -- --require-approval never
+```
 
 ## ✅ 初回セットアップチェックリスト
 

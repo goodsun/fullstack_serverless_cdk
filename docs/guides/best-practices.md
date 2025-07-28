@@ -116,8 +116,9 @@ table.grantReadWriteData(lambdaFunction); // 特定のテーブルのみ
 4. デプロイ後の検証
 
 ### ブランチ戦略
-- `main` → 本番環境
-- `develop` → 開発環境
+- `production` → 本番環境（prod）
+- `staging` → ステージング環境
+- `develop` → 開発環境（dev）
 - `feature/*` → 機能開発（PRベース）
 
 ## 8. ドキュメント駆動開発
