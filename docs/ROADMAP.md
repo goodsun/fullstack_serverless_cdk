@@ -18,32 +18,35 @@
 
 ## 🛣️ マイルストーン
 
-### Phase 1: MVP完成（2024年Q1） ✅ 完了
+### Phase 1: MVP完成（2025年Q3） ✅ 完了
 - [x] 基本的なCDKスタック構成
 - [x] CRUD APIの実装
 - [x] フロントエンドの基本実装
 - [x] ドキュメント整備
-- [x] 環境変数によるプロジェクト名管理（2024年7月追加）
+- [x] 環境変数によるプロジェクト名管理
+- [x] GitHub Actions CI/CD
+- [x] ローカル開発環境
+- [x] API URL自動設定機能
 
-### Phase 2: CLIツール化（2024年Q2）
+### Phase 2: CLIツール化（2025年Q4）
 - [ ] `npx create-serverless-cdk` コマンドの実装
 - [ ] テンプレート選択機能（minimal/standard/full）
 - [ ] インタラクティブセットアップ
 - [ ] npmパッケージとして公開
 
-### Phase 3: 機能拡充（2024年Q3）
+### Phase 3: 機能拡充（2026年Q1）
 - [ ] 認証・認可機能（Cognito統合）
 - [ ] ファイルアップロード機能（S3 presigned URL）
 - [ ] メール送信機能（SES統合）
 - [ ] キュー処理（SQS/EventBridge）
 
-### Phase 4: エンタープライズ機能（2024年Q4）
-- [ ] CI/CDパイプライン（GitHub Actions/CodePipeline）
-- [ ] 監視・アラート（CloudWatchダッシュボード）
+### Phase 4: エンタープライズ機能（2026年Q2）
+- [ ] 高度な監視・アラート（CloudWatchダッシュボード）
 - [ ] マルチリージョン対応
 - [ ] カスタムドメイン設定
+- [ ] WAF統合
 
-### Phase 5: フレームワーク対応（2025年Q1）
+### Phase 5: フレームワーク対応（2026年Q3）
 - [ ] Reactテンプレート
 - [ ] Vue.jsテンプレート
 - [ ] Next.jsテンプレート

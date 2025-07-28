@@ -76,30 +76,47 @@ jobs:
           API_ENDPOINT="${{ secrets.API_ENDPOINT_PROD || '' }}"
         fi
         
-        # If environment-specific API_ENDPOINT is not set in secrets, get it from stack output
-        if [ -z "$API_ENDPOINT" ]; then
-          API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }})
-        fi
-        
-        # Create api-config.js with the API endpoint
-        cat > frontend/js/api-config.js << EOF
+        # Check if stack exists
+        if aws cloudformation describe-stacks --stack-name $STACK_NAME --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} >/dev/null 2>&1; then
+          echo "Stack $STACK_NAME exists"
+          
+          # If environment-specific API_ENDPOINT is not set in secrets, get it from stack output
+          if [ -z "$API_ENDPOINT" ]; then
+            API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`ApiEndpoint`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} || echo "")
+          fi
+          
+          # Create api-config.js with the API endpoint
+          cat > frontend/js/api-config.js << EOF
         // Auto-generated during deployment - DO NOT EDIT
         window.API_CONFIG = {
           apiEndpoint: '$API_ENDPOINT',
           isManaged: true
         };
         EOF
-        
-        # Get S3 bucket name
-        BUCKET_NAME="${{ secrets.PROJECT_NAME }}-frontend-${ENV}"
-        
-        # Upload updated frontend
-        aws s3 sync frontend/ s3://$BUCKET_NAME/ --delete
-        
-        # Invalidate CloudFront cache
-        DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} || echo "")
-        if [ ! -z "$DISTRIBUTION_ID" ]; then
-          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+          
+          # Get S3 bucket name with account ID
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          BUCKET_NAME="${{ secrets.PROJECT_NAME }}-frontend-${ENV}-${ACCOUNT_ID}"
+          
+          # Check if bucket exists before syncing
+          if aws s3 ls "s3://$BUCKET_NAME" >/dev/null 2>&1; then
+            echo "Syncing frontend to S3 bucket: $BUCKET_NAME"
+            
+            # Upload updated frontend
+            aws s3 sync frontend/ s3://$BUCKET_NAME/ --delete
+            
+            # Invalidate CloudFront cache
+            DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`DistributionId`].OutputValue' --output text --region ${{ secrets.AWS_REGION || 'ap-northeast-1' }} || echo "")
+            if [ ! -z "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+              echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
+              aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+            fi
+          else
+            echo "Warning: S3 bucket $BUCKET_NAME not found. Skipping frontend sync."
+          fi
+        else
+          echo "Stack $STACK_NAME does not exist yet. This might be the first deployment."
+          echo "Frontend configuration will be handled in the next deployment."
         fi
 
     - name: Show outputs
